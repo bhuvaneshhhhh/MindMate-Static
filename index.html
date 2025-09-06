@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindMate - Your AI Journal Companion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&family=Orbitron:wght@400..900&display=swap" rel="stylesheet">
+    <!-- Preload the logo image for instant loading -->
+    <link rel="preload" href="https://image2url.com/images/1757174819346-55076b7d-ef5a-496e-90ed-2425b55abf69.jpeg" as="image">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0A0A1A;
+            min-height: 100vh;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Futuristic background with subtle animation */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                /* Journal lines / Brain network */
+                linear-gradient(to right, #2c0e0e 1px, transparent 1px),
+                linear-gradient(to bottom, #2c0e0e 1px, transparent 1px),
+                /* Unique glowing shapes and book theme */
+                radial-gradient(circle at 10% 20%, rgba(127, 0, 0, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 90% 80%, rgba(225, 0, 0, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(200, 0, 0, 0.05) 0%, transparent 80%),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 50px 50px, 50px 50px, 100% 100%, 100% 100%, 100% 100%, 100% 50px;
+            background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 0 0;
+            opacity: 0.8;
+            animation: moveBackground 30s linear infinite;
+            z-index: -1;
+        }
+
+        /* Animated dots for the "friendly talking" effect */
+        body::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle, #FFDADA 1px, transparent 1.5px);
+            background-size: 20px 20px;
+            animation: moveDots 20s linear infinite;
+            opacity: 0.3;
+            z-index: -1;
+        }
+
+        @keyframes moveBackground {
+            0% { background-position: 0 0; }
+            100% { background-position: 50px 50px; }
+        }
+
+        @keyframes moveDots {
+            0% { background-position: 0 0; }
+            100% { background-position: -200px -200px; }
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            width: 100%;
+            max-width: 1200px;
+            padding: 1rem;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+        }
+        @media (min-width: 768px) {
+            .container {
+                flex-direction: row;
+            }
+        }
+        
+        .panel {
+            background-color: rgba(30, 10, 10, 0.6);
+            backdrop-filter: blur(20px);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3), 0 0 50px rgba(127, 0, 0, 0.2) inset;
+            flex: 1;
+            color: #FFEEEE;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(127, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+        }
+
+        .panel:hover {
+            transform: translateY(-5px);
+        }
+
+        .chat-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding-right: 1rem;
+            padding-bottom: 1rem;
+        }
+        
+        .chat-message {
+            max-width: 85%;
+            padding: 0.75rem 1.25rem;
+            border-radius: 1.25rem;
+            line-height: 1.4;
+            transition: all 0.3s ease;
+        }
+
+        .user-message {
+            background: linear-gradient(90deg, #A02020, #E04040);
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 0.25rem;
+            box-shadow: 0 4px 15px rgba(127, 0, 0, 0.2);
+        }
+
+        .ai-message {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #FFEEEE;
+            align-self: flex-start;
+            border-bottom-left-radius: 0.25rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .chat-input-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .chat-input {
+            flex-grow: 1;
+            border-radius: 9999px;
+            padding: 0.75rem 1.25rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(127, 0, 0, 0.5);
+            color: #fff;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #FF0000;
+            box-shadow: 0 0 0 3px rgba(255, 0, 0, 0.3);
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .send-button {
+            border-radius: 9999px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            background: linear-gradient(90deg, #A02020, #E04040);
+            color: white;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 15px rgba(127, 0, 0, 0.4);
+            border: none;
+        }
+
+        .send-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(127, 0, 0, 0.6);
+        }
+
+        .entry-list-item {
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(127, 0, 0, 0.2);
+        }
+
+        .entry-list-item:hover {
+            transform: translateX(5px);
+            background-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .save-button {
+            border-radius: 1.5rem;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            background: linear-gradient(90deg, #A02020, #E04040);
+            color: white;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 15px rgba(127, 0, 0, 0.4);
+        }
+
+        .save-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 6px 20px rgba(127, 0, 0, 0.6);
+        }
+        
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border-left-color: #fff;
+            animation: spin 1s ease infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spinner-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        /* Modal styling */
+        .modal {
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-content {
+            background: rgba(30, 10, 10, 0.9);
+            border-radius: 1.5rem;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(127, 0, 0, 0.5);
+            color: #FFEEEE;
+        }
+        .modal-button {
+            background: linear-gradient(90deg, #A02020, #E04040);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .modal-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(127, 0, 0, 0.6);
+        }
+        .logo-container {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .logo-img {
+            width: 48px;
+            height: 48px;
+            
+        }
+        #app-title {
+            font-family: 'Orbitron', sans-serif;
+            background: linear-gradient(45deg, #FF6666, #FF9999);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 15px rgba(255, 102, 102, 0.7), 0 0 30px rgba(255, 153, 153, 0.5);
+            letter-spacing: 2px;
+            font-weight: 700;
+        }
+
+    </style>
+</head>
+<body class="p-8">
+
+    <div class="text-center mb-8">
+        <div class="logo-container">
+            <img src="https://image2url.com/images/1757174819346-55076b7d-ef5a-496e-90ed-2425b55abf69.jpeg" alt="MindMate Logo" class="logo-img">
+            <h1 class="text-4xl font-extrabold tracking-tight" id="app-title">MindMate</h1>
+        </div>
+        <p class="text-lg mt-2 opacity-80" id="user-display-info">Welcome, Friend!</p>
+    </div>
+
+    <div id="main-content" class="container">
+        <!-- Write Your Thoughts Panel -->
+        <div class="panel flex-1">
+            <h2 class="text-2xl font-semibold mb-6">Write Your Thoughts</h2>
+
+            <div class="mb-4">
+                <label for="mood-select" class="block font-medium mb-1">How are you feeling?</label>
+                <select id="mood-select" class="w-full p-2 border border-gray-500 rounded-lg bg-transparent text-white">
+                    <option class="bg-[#2c0e0e] text-white" value="Neutral">Neutral 😐</option>
+                    <option class="bg-[#2c0e0e] text-white" value="Happy">Happy 😊</option>
+                    <option class="bg-[#2c0e0e] text-white" value="Excited">Excited 🤩</option>
+                    <option class="bg-[#2c0e0e] text-white" value="Calm">Calm 😌</option>
+                    <option class="bg-[#2c0e0e] text-white" value="Motivated">Motivated 💪</option>
+                    <option class="bg-[#2c0e0e] text-white" value="Sad">Sad 😔</option>
+                    <option class="bg-[#2c0e0e] text-white" value="Depressed">Depressed 😞</option>
+                </select>
+            </div>
+
+            <div class="mb-6 flex-grow">
+                <label for="journal-entry" class="block font-medium mb-1">What's on your mind today?</label>
+                <textarea id="journal-entry" class="w-full h-full p-4 border border-gray-500 rounded-lg resize-none bg-transparent placeholder-gray-400 text-white" placeholder="Input your consciousness..."></textarea>
+            </div>
+            <button id="save-entry-btn" class="save-button w-full">Save & Process ✨</button>
+
+            <h3 class="text-xl font-semibold mt-8 mb-4">Previous Entries</h3>
+            <div id="entries-list" class="flex flex-col gap-4 overflow-y-auto">
+                <!-- Journal entries will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Chat with Your AI Companion Panel -->
+        <div class="panel flex-1 flex flex-col">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-semibold">Chat with AI Companion</h2>
+                <button id="end-chat-btn" class="text-sm text-purple-400 hover:underline hidden">End Entry</button>
+            </div>
+            <div id="chat-messages" class="chat-container">
+                <div id="initial-ai-message" class="ai-message">
+                    Hello, my name is MindMate. What's your name so I may address you properly?
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <input type="text" id="chat-input" class="chat-input" placeholder="Initiate dialogue...">
+                <button id="send-btn" class="send-button">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal" class="modal hidden fixed inset-0 flex items-center justify-center p-4 z-50">
+        <div class="modal-content rounded-lg p-6 shadow-xl max-w-sm w-full text-center">
+            <h3 id="modal-title" class="text-xl font-bold mb-4"></h3>
+            <p id="modal-message" class="text-base text-gray-300 mb-6"></p>
+            <input type="text" id="name-input" class="w-full p-4 border border-gray-500 rounded-lg bg-transparent text-white placeholder-gray-400 focus:border-purple-500 focus:shadow-outline-purple hidden" placeholder="Enter your name">
+            <button id="modal-close-btn" class="modal-button mt-4">OK</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Local Storage Keys ---
+        const USER_NAME_KEY = 'mindmate-user-name';
+        const ENTRIES_KEY = 'mindmate-journal-entries';
+
+        let userName = localStorage.getItem(USER_NAME_KEY);
+        let selectedEntry = null;
+        let entries = JSON.parse(localStorage.getItem(ENTRIES_KEY) || '[]');
+
+        // --- UI Elements ---
+        const userDisplayInfo = document.getElementById('user-display-info');
+        const journalEntryTextarea = document.getElementById('journal-entry');
+        const moodSelect = document.getElementById('mood-select');
+        const saveBtn = document.getElementById('save-entry-btn');
+        const entriesList = document.getElementById('entries-list');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-btn');
+        const endChatBtn = document.getElementById('end-chat-btn');
+        const modal = document.getElementById('modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        const nameInput = document.getElementById('name-input');
+
+        // Show modal for alerts and confirmations
+        function showModal(title, message, showInput = false) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            if (showInput) {
+                nameInput.classList.remove('hidden');
+                nameInput.focus();
+                modalCloseBtn.textContent = 'Continue';
+            } else {
+                nameInput.classList.add('hidden');
+                modalCloseBtn.textContent = 'OK';
+            }
+            modal.classList.remove('hidden');
+        }
+
+        modalCloseBtn.addEventListener('click', () => {
+            if (!nameInput.classList.contains('hidden')) {
+                const enteredName = nameInput.value.trim();
+                if (enteredName) {
+                    userName = enteredName;
+                    localStorage.setItem(USER_NAME_KEY, userName);
+                    userDisplayInfo.textContent = `Welcome, ${userName}!`;
+                    nameInput.classList.add('hidden');
+                    modal.classList.add('hidden');
+                } else {
+                    showModal('Wait!', 'Please enter your name to continue.');
+                }
+            } else {
+                modal.classList.add('hidden');
+            }
+        });
+
+        // --- Data Persistence and UI Rendering ---
+        const saveEntries = () => {
+            localStorage.setItem(ENTRIES_KEY, JSON.stringify(entries));
+            renderEntriesList();
+        };
+
+        const renderEntriesList = () => {
+            entriesList.innerHTML = '';
+            entries.sort((a, b) => b.createdAt - a.createdAt);
+            entries.forEach(entry => {
+                const listItem = document.createElement('div');
+                const date = new Date(entry.createdAt).toLocaleDateString('en-US', {
+                    year: 'numeric', month: 'short', day: 'numeric',
+                });
+                listItem.classList.add('entry-list-item');
+                listItem.innerHTML = `
+                    <div class="text-sm text-gray-400">${date}</div>
+                    <div class="font-bold text-gray-200">${entry.mood}</div>
+                    <p class="text-gray-300 mt-1 line-clamp-2">${entry.text}</p>
+                `;
+                listItem.addEventListener('click', () => {
+                    selectedEntry = entry;
+                    renderChatMessages(entry.conversation);
+                    endChatBtn.classList.remove('hidden');
+                });
+                entriesList.appendChild(listItem);
+            });
+        };
+
+        const renderChatMessages = (conversation) => {
+            chatMessages.innerHTML = '';
+            const initialMessage = document.getElementById('initial-ai-message');
+            if (initialMessage) {
+                chatMessages.appendChild(initialMessage);
+            }
+            if (conversation && conversation.length > 0) {
+                 conversation.forEach(msg => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.textContent = msg.text;
+                    messageDiv.classList.add('chat-message', msg.role === 'user' ? 'user-message' : 'ai-message');
+                    chatMessages.appendChild(messageDiv);
+                });
+            }
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        };
+
+        const addMessageToChat = (role, text) => {
+            const messageDiv = document.createElement('div');
+            messageDiv.textContent = text;
+            messageDiv.classList.add('chat-message', role === 'user' ? 'user-message' : 'ai-message');
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        };
+
+        const clearChat = () => {
+            selectedEntry = null;
+            chatMessages.innerHTML = '';
+            endChatBtn.classList.add('hidden');
+            const initialMessage = document.getElementById('initial-ai-message');
+            if (initialMessage) {
+                chatMessages.appendChild(initialMessage);
+            }
+        };
+
+        // --- AI API Integration ---
+        const callGeminiAPI = async (prompt, conversationHistory, systemInstruction = `You are MindMate, a logical and analytical AI companion for a personal journal. Your purpose is to provide structured and understandable insights into the user's journal entries. Use clear reasoning and break down complex feelings into logical components. Keep your responses concise and focused on a rational analysis of the user's thoughts. Do not offer medical or professional advice. The user's name is ${userName}.`) => {
+            try {
+                const apiKey = "AIzaSyCT_x-0ByEohDCeYW-bGhocEI8zLVJrS-s";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                
+                const chatContents = conversationHistory.map(msg => ({
+                    role: msg.role === 'user' ? 'user' : 'model',
+                    parts: [{ text: msg.text }]
+                }));
+                chatContents.push({
+                    role: "user",
+                    parts: [{ text: prompt }]
+                });
+
+                const payload = {
+                    contents: chatContents,
+                    systemInstruction: {
+                        parts: [{ text: systemInstruction }]
+                    }
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API call failed with status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                return text || "I'm sorry, I couldn't generate a response right now. Please try again.";
+
+            } catch (error) {
+                console.error("Error calling Gemini API:", error);
+                showModal('API Error', 'Failed to connect to the AI. Please check your network and try again.');
+                return "I'm sorry, I'm having trouble connecting right now. Please try again later.";
+            }
+        };
+
+        // --- Event Handlers ---
+        saveBtn.addEventListener('click', async () => {
+            const journalEntry = journalEntryTextarea.value.trim();
+            const mood = moodSelect.value;
+            if (journalEntry === '') {
+                showModal('Missing Entry', 'Please write something in your journal before saving.');
+                return;
+            }
+
+            saveBtn.innerHTML = '<div class="spinner"></div>';
+            saveBtn.disabled = true;
+
+            const initialPrompt = `My journal entry for today is: "${journalEntry}". My mood is ${mood}. How do you feel about this?`;
+            
+            let conversation = [{ role: 'user', text: journalEntry }];
+            
+            const aiResponse = await callGeminiAPI(initialPrompt, conversation);
+            
+            conversation.push({ role: 'ai', text: aiResponse });
+            
+            const newEntry = {
+                id: Date.now(),
+                text: journalEntry,
+                mood: mood,
+                createdAt: Date.now(),
+                conversation: conversation,
+            };
+            entries.push(newEntry);
+            saveEntries();
+
+            selectedEntry = newEntry;
+            renderChatMessages(newEntry.conversation);
+            journalEntryTextarea.value = '';
+            moodSelect.value = 'Neutral';
+            endChatBtn.classList.remove('hidden');
+
+            saveBtn.innerHTML = 'Save & Process ✨';
+            saveBtn.disabled = false;
+        });
+
+        sendBtn.addEventListener('click', async () => {
+            const userMessage = chatInput.value.trim();
+            if (userMessage === '') return;
+            if (!selectedEntry) {
+                showModal('Error', 'No entry selected. Please select a journal entry from the list or save a new one to start a conversation.');
+                return;
+            }
+
+            addMessageToChat('user', userMessage);
+            chatInput.value = '';
+            
+            sendBtn.innerHTML = '<div class="spinner"></div>';
+            sendBtn.disabled = true;
+
+            const aiResponse = await callGeminiAPI(userMessage, selectedEntry.conversation);
+            selectedEntry.conversation.push({ role: 'user', text: userMessage });
+            selectedEntry.conversation.push({ role: 'ai', text: aiResponse });
+
+            saveEntries();
+            addMessageToChat('ai', aiResponse);
+
+            sendBtn.innerHTML = 'Send';
+            sendBtn.disabled = false;
+        });
+        
+        endChatBtn.addEventListener('click', clearChat);
+
+        // --- Initial Load ---
+        const initializeApp = () => {
+            renderEntriesList();
+            if (!userName) {
+                setTimeout(() => {
+                    showModal('Welcome to MindMate!', 'Please enter your name so your AI companion can address you properly.', true);
+                }, 500);
+            } else {
+                 userDisplayInfo.textContent = `Welcome, ${userName}!`;
+            }
+        };
+
+        window.onload = initializeApp;
+
+    </script>
+</body>
+</html>
